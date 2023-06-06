@@ -7,7 +7,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      // forbidNonWhitelisted: true, //this help us to avoid to receive extra info in the request
     }),
   );
   await app.listen(3000);

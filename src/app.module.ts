@@ -8,6 +8,9 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { JwtService } from '@nestjs/jwt';
+import { SeedModule } from './seed/seed.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -23,16 +26,40 @@ import { AuthModule } from './auth/auth.module';
       synchronize: true,
       autoLoadEntities: true,
     }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+
+    GraphQLModule.forRootAsync({
       driver: ApolloDriver,
-      // debug: false,
-      playground: false,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      imports: [AuthModule],
+      inject: [JwtService],
+      useFactory: async (jwtService: JwtService) => ({
+        driver: ApolloDriver,
+        // debug: false,
+        playground: false,
+        autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+        plugins: [ApolloServerPluginLandingPageLocalDefault()],
+        context({ req }) {
+          //this is commented because we token generation should be handled in a differente REST endpoint
+          // const token = req.headers.authorization?.replace('Bearer ', '');
+          // if (!token) throw Error('Token not provided');
+          // const payload = jwtService.decode(token);
+          // if (!payload) throw Error('Token not valid');
+        },
+      }),
     }),
+
+    // TODO
+    // GraphQLModule.forRoot<ApolloDriverConfig>({
+    //   driver: ApolloDriver,
+    //   // debug: false,
+    //   playground: false,
+    //   autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+    //   plugins: [ApolloServerPluginLandingPageLocalDefault()],
+    // }),
     ItemsModule,
     UsersModule,
     AuthModule,
+    SeedModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],
